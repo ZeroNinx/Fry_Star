@@ -1,25 +1,205 @@
-<UI version="4.0" >
- <class>Fry_StarClass</class>
- <widget class="QWidget" name="Fry_StarClass" >
-  <property name="objectName" >
-   <string notr="true">Fry_StarClass</string>
-  </property>
-  <property name="geometry" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainForm</class>
+ <widget class="QWidget" name="MainForm">
+  <property name="geometry">
    <rect>
-	<x>0</x>
-	<y>0</y>
-	<width>600</width>
-	<height>400</height>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>400</height>
    </rect>
   </property>
-  <property name="windowTitle" >
-   <string>Fry_Star</string>
+  <property name="windowTitle">
+   <string>炒星签到通 v0.5 by Zero</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../../../../Desktop/未标题-1.png</normaloff>../../../../Desktop/未标题-1.png</iconset>
+  </property>
+  <widget class="QLabel" name="lbl_id">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>神秘Cookie:</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="le_cookie">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>10</y>
+     <width>451</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btn_submit">
+   <property name="geometry">
+    <rect>
+     <x>540</x>
+     <y>10</y>
+     <width>51</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>登录</string>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="pte_message">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>70</y>
+     <width>581</width>
+     <height>321</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="cb_unit">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>40</y>
+     <width>221</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lbl_change_unit">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>40</y>
+     <width>54</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>选择科目:</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="sb_speed">
+   <property name="geometry">
+    <rect>
+     <x>400</x>
+     <y>40</y>
+     <width>42</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>99</number>
+   </property>
+   <property name="value">
+    <number>5</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>40</y>
+     <width>81</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>监控间隔:每</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>40</y>
+     <width>61</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>秒扫描一次</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btn_boom">
+   <property name="geometry">
+    <rect>
+     <x>540</x>
+     <y>40</y>
+     <width>51</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>爆破</string>
+   </property>
+  </widget>
  </widget>
- <layoutDefault spacing="6" margin="11" />
- <pixmapfunction></pixmapfunction>
- <resources>
-   <include location="Fry_Star.qrc"/>
- </resources>
- <connections/>
-</UI>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>btn_submit</sender>
+   <signal>clicked()</signal>
+   <receiver>MainForm</receiver>
+   <slot>btn_submit_click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>550</x>
+     <y>30</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>393</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_boom</sender>
+   <signal>clicked()</signal>
+   <receiver>MainForm</receiver>
+   <slot>btn_boom_click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>567</x>
+     <y>57</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>526</x>
+     <y>52</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_unit</sender>
+   <signal>currentTextChanged(QString)</signal>
+   <receiver>MainForm</receiver>
+   <slot>cb_unit_change(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>242</x>
+     <y>48</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>317</x>
+     <y>46</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>btn_submit_click()</slot>
+  <slot>cb_unit_change(QString)</slot>
+  <slot>btn_boom_click()</slot>
+ </slots>
+</ui>

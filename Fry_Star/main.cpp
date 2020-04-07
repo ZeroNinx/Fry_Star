@@ -1,5 +1,5 @@
+#include "stdafx.h"
 #include "Fry_Star.h"
-#include <QtWidgets/QApplication>
 
 int main(int argc, char *argv[])
 {
