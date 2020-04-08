@@ -254,6 +254,10 @@ void Fry_Star::sign()
 			display(qs("签到成功！"));
 			aid_list[aid] = true;
 		}
+		else if (qs8(resp.body()) == qs("您已签到过了"))
+		{
+			aid_list[aid] = true;
+		}
 		else
 		{
 			display(qs("签到失败！"));
