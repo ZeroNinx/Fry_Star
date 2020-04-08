@@ -125,7 +125,6 @@ bool Fry_Star::get_course()
 		//输出错误
 		ui.pte_message->appendPlainText(qs((std::string)"错误：" + e.what()));
 		ui.pte_message->appendPlainText(qs("好像潜入失败了......也许是神秘连接出错了？"));
-		shutdown(socket);
 		return false;
 	}
 }
@@ -202,12 +201,13 @@ void Fry_Star::auto_sign()
 		}
 		if (!found_active)
 			display(qs("[爆破中][当前已签到："+to_string(siged)+", 未签到: "+to_string(unsiged))+qs("]未检测到签到活动......"));
+		shutdown(socket);
 	}
 	catch (exception e)
 	{
 		display(qs("错误") + qs(e.what()));
 	}
-	shutdown(socket);
+	
 }
 
 //签到
@@ -264,13 +264,13 @@ void Fry_Star::sign()
 			display(qs("信息："));
 			display(qs8(resp.body()));
 		}
-
+		shutdown(socket);
 	}
 	catch (exception e)
 	{
 		display(qs("错误") + qs(e.what()));
 	}
-	shutdown(socket);
+	
 }
 
 //登录按钮
