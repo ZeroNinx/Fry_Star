@@ -1,7 +1,8 @@
 ﻿#pragma once
 #pragma once
+#include <sdkddkver.h>
 
-
+//std
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -9,8 +10,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <sdkddkver.h>
 
+//Boost
 #include <boost/asio.hpp>
 #include <boost/foreach.hpp>
 #include <boost/beast.hpp>
@@ -18,11 +19,21 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+//WinAPI
+#include <Windows.h>
+#include <wincrypt.h>
 
+//Qt
 #include <QString>
 #include <QTimer>
 #include <QtWidgets/QApplication>
 #include <QMessageBox>
+
+//Cryptopp
+#include <cryptopp/aes.h>
+#include <cryptopp/base64.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/gcm.h>
 
 #define see(x) QMessageBox::information(NULL, qs("提示"), x)
 #define ffor(i,a,b) for(int i=a;i<=b;i++)

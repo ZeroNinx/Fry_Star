@@ -1,9 +1,14 @@
 #include "Fry_Star.h"
+#include "sqlite3.h"
+
 
 #define display(x) ui.pte_message->appendPlainText(x)
 using namespace std;
 using namespace boost::property_tree;
 using namespace boost::beast::http;
+using namespace CryptoPP;
+
+string local_appdata_path = getenv("LOCALAPPDATA");
 
 //自定义：关闭套接字
 void shutdown(boost::asio::ip::tcp::socket& socket)
@@ -18,15 +23,35 @@ void shutdown(boost::asio::ip::tcp::socket& socket)
 }
 
 //构造函数、初始化
-Fry_Star::Fry_Star(QWidget *parent)
+Fry_Star::Fry_Star(QWidget* parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
 	this->setFixedSize(width(), height());
 	ui.pte_message->setReadOnly(true);
-	
-	//读取储存的cookie
+
+	//得到密钥
+	DATA_BLOB DataOut;
+	DATA_BLOB DataVerify;
+
+	ptree root;
 	fstream fs;
+	string file = local_appdata_path + "\\Google\\Chrome\\User Data\\Local State";
+	fs.open(file, ios::in);
+	read_json(fs, root);
+	string encrypt_key = root.get_child("os_crypt").get<string>("encrypted_key");
+	string enc_cache;
+	StringSource ss1(encrypt_key, true, new Base64Decoder(new StringSink(enc_cache)));
+	encrypt_key = enc_cache.substr(5, enc_cache.length() - 5);
+
+	DataOut.pbData = (BYTE*)encrypt_key.c_str();
+	DataOut.cbData = encrypt_key.size();
+	CryptUnprotectData(&DataOut, NULL, NULL, NULL, NULL, 0, &DataVerify);
+	key = (char*)DataVerify.pbData;//密钥
+	key = key.substr(0, 32);
+	fs.close();
+
+	//读取储存的cookie
 	fs.open("cache.cfg", ios::in);
 	if (fs)
 	{
@@ -46,6 +71,57 @@ Fry_Star::Fry_Star(QWidget *parent)
 	//绑定槽函数
 	connect(timer, &QTimer::timeout, this, &Fry_Star::auto_sign);
 
+	ui.le_cookie->setText(qs("----------如果自动获取失败的话可以试试手动输入哦----------"));
+	ui.pte_message->setFocus();
+	auto_login();
+}
+
+//自定义：解密
+string Fry_Star::decrypt(string s)
+{
+	DATA_BLOB DataOut;
+	DATA_BLOB DataVerify;
+
+	DataOut.pbData = (BYTE*)s.c_str();
+	DataOut.cbData = s.size();
+
+	//尝试Chrome80以下版本
+	if (CryptUnprotectData(&DataOut,NULL,NULL,NULL,NULL,0,&DataVerify))
+		return (char*)DataVerify.pbData;
+	else//Chrome 80以上版本
+	{
+		if (s.substr(0,2)=="v1")
+		{
+			string nonce = s.substr(3, 12);//随机数
+			string ciphertext = s.substr(3 + 12, s.length() - 16 - 3 - 12);//密文
+			string tag = s.substr(s.length() - 16, 16);//身份验证标签
+			string result;
+			try
+			{
+				GCM<AES>::Decryption d;
+				d.SetKeyWithIV((BYTE*)key.c_str(), key.size(), (BYTE*)nonce.c_str(), nonce.size());
+
+				AuthenticatedDecryptionFilter df(d,
+					new StringSink(result),
+					AuthenticatedDecryptionFilter::MAC_AT_END, tag.size()
+					);//设定认证模式
+
+				StringSource ss2(ciphertext + tag, true,
+					new Redirector(df)
+					);//认证并解码
+
+				if (true == df.GetLastResult()) 
+					return result;
+			}
+			catch (CryptoPP::Exception& e)
+			{
+				display(qs(e.what()));
+				return "err";
+			}
+			return "err";
+		}
+		return "err";
+	}
 }
 
 //取得课程信息
@@ -273,27 +349,72 @@ void Fry_Star::sign()
 	
 }
 
-//登录按钮
-void Fry_Star::btn_submit_click()
+//自动登录
+void Fry_Star::auto_login()
 {
-	//检测cookie非空
-	cookie = ui.le_cookie->text().toStdString();
-	if (cookie.empty())
+
+	string file = local_appdata_path + "\\Google\\Chrome\\User Data\\Default\\Cookies";
+	string sql = "select name,encrypted_value from cookies where host_key='.chaoxing.com';";
+
+	sqlite3* sqlite = NULL;
+	sqlite3_stmt* stmt = NULL;
+
+	int res = sqlite3_open(file.c_str(), &sqlite);
+	if (res != SQLITE_OK)
 	{
-		see(qs("请输入神秘Cookie！"));
+		display(qs("读取失败辣！请记得留下Cookie！"));
+		return;
+	}
+	res = sqlite3_prepare(sqlite, sql.c_str(), -1, &stmt, NULL);
+	if (res != SQLITE_OK)
+	{
+		display(qs("数据库出错了！"));
 		return;
 	}
 
+	//读取值并解密
+	while (sqlite3_step(stmt) == SQLITE_ROW)
+	{
+		string name, value;
+		name = (char*)sqlite3_column_text(stmt, 0);
+		int len = sqlite3_column_bytes(stmt, 1);
+		value.resize(len);
+		const void* blob = sqlite3_column_blob(stmt, 1);
+		for (int i = 0; i < len; i++)
+			value[i] = ((char*)blob)[i];
+		value = decrypt(value);
+		if (name == "UID")
+			uid = value;
+		if (value == "err")
+		{
+			display("异次元Cookie读取失败了！试试手动输入吧！");
+			return;
+		}
+		cookie += name + "=" + value + ";";
+	}
+	ui.pte_message->appendPlainText(qs("你的曲奇已经准备好了！"));
+	ui.pte_message->appendPlainText(qs("正在潜入敌方总部......"));
+	ui.pte_message->appendPlainText(qs("伪装UA：") + qs(ua));
+	if (get_course() && !uid.empty())
+		display(qs("潜入成功！请选择好要签到的课程，然后点击爆破吧！"));
+	else ui.pte_message->appendPlainText(qs("Cookie似乎出错了...？"));
+}
+
+//手动登录按钮
+void Fry_Star::btn_submit_click()
+{
+	if (ui.le_cookie->text().isEmpty())
+	{
+		display(qs("请输入神秘Cookie！"));
+		return;
+	}
 	//写入Cookie
 	fstream fs;
-	fs.open("cache.cfg",ios::out);
+	fs.open("cache.cfg", ios::out);
 	if (fs)
 		fs << ui.le_cookie->text().toStdString();
 	fs.close();
-
-	//开始执行任务
-	ui.pte_message->appendPlainText(qs("正在潜入敌方总部......"));
-	ui.pte_message->appendPlainText(qs("伪装UA：")+qs(ua));
+	cookie = ui.le_cookie->text().toStdString();
 
 	//解析出uid
 	map<string, string> mp = cut_string(cookie, ';');
@@ -303,14 +424,22 @@ void Fry_Star::btn_submit_click()
 			uid = i->second;
 	}
 
+	ui.pte_message->setPlainText("");
+	ui.cb_unit->clear();
+
+	//开始执行任务
+	ui.pte_message->appendPlainText(qs("正在潜入敌方总部......"));
+	ui.pte_message->appendPlainText(qs("伪装UA：") + qs(ua));
 	if (get_course() && !uid.empty())
-		display(qs("潜入成功！请选择好要签到的课程，然后点击爆破吧！"));	
+		display(qs("潜入成功！请选择好要签到的课程，然后点击爆破吧！"));
 	else ui.pte_message->appendPlainText(qs("Cookie似乎出错了...？"));
 }
 
 //爆破按钮
 void Fry_Star::btn_boom_click()
 {
+	if (ui.cb_unit->currentText().isEmpty())
+		return;
 	display(qs("正在准备爆破......"));
 	timer->setInterval(ui.sb_speed->value() * 1000);
 	timer->start();
@@ -319,6 +448,7 @@ void Fry_Star::btn_boom_click()
 //单元选择切换
 void Fry_Star::cb_unit_change(QString text)
 {
+	if(!text.isEmpty())
 	display(qs("当前科目：") + text);
 }
 
