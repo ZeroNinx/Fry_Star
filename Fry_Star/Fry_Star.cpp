@@ -36,19 +36,23 @@ Fry_Star::Fry_Star(QWidget* parent)
 
 	ptree root;
 	fstream fs;
+	
 	string file = local_appdata_path + "\\Google\\Chrome\\User Data\\Local State";
 	fs.open(file, ios::in);
-	read_json(fs, root);
-	string encrypt_key = root.get_child("os_crypt").get<string>("encrypted_key");
-	string enc_cache;
-	StringSource ss1(encrypt_key, true, new Base64Decoder(new StringSink(enc_cache)));
-	encrypt_key = enc_cache.substr(5, enc_cache.length() - 5);
+	if (fs)
+	{
+		read_json(fs, root);
+		string encrypt_key = root.get_child("os_crypt").get<string>("encrypted_key");
+		string enc_cache;
+		StringSource ss1(encrypt_key, true, new Base64Decoder(new StringSink(enc_cache)));
+		encrypt_key = enc_cache.substr(5, enc_cache.length() - 5);
 
-	DataOut.pbData = (BYTE*)encrypt_key.c_str();
-	DataOut.cbData = encrypt_key.size();
-	CryptUnprotectData(&DataOut, NULL, NULL, NULL, NULL, 0, &DataVerify);
-	key = (char*)DataVerify.pbData;//密钥
-	key = key.substr(0, 32);
+		DataOut.pbData = (BYTE*)encrypt_key.c_str();
+		DataOut.cbData = encrypt_key.size();
+		CryptUnprotectData(&DataOut, NULL, NULL, NULL, NULL, 0, &DataVerify);
+		key = (char*)DataVerify.pbData;//密钥
+		key = key.substr(0, 32);
+	}
 	fs.close();
 
 	//读取储存的cookie
@@ -73,7 +77,7 @@ Fry_Star::Fry_Star(QWidget* parent)
 
 	ui.le_cookie->setText(qs("----------如果自动获取失败的话可以试试手动输入哦----------"));
 	ui.pte_message->setFocus();
-	auto_login();
+	//auto_login();
 }
 
 //自定义：解密
@@ -352,52 +356,59 @@ void Fry_Star::sign()
 //自动登录
 void Fry_Star::auto_login()
 {
-
-	string file = local_appdata_path + "\\Google\\Chrome\\User Data\\Default\\Cookies";
-	string sql = "select name,encrypted_value from cookies where host_key='.chaoxing.com';";
-
-	sqlite3* sqlite = NULL;
-	sqlite3_stmt* stmt = NULL;
-
-	int res = sqlite3_open(file.c_str(), &sqlite);
-	if (res != SQLITE_OK)
+	try
 	{
-		display(qs("读取失败辣！请记得留下Cookie！"));
-		return;
-	}
-	res = sqlite3_prepare(sqlite, sql.c_str(), -1, &stmt, NULL);
-	if (res != SQLITE_OK)
-	{
-		display(qs("数据库出错了！"));
-		return;
-	}
+		string file = local_appdata_path + "\\Google\\Chrome\\User Data\\Default\\Cookies";
+		string sql = "select name,encrypted_value from cookies where host_key='.chaoxing.com';";
 
-	//读取值并解密
-	while (sqlite3_step(stmt) == SQLITE_ROW)
-	{
-		string name, value;
-		name = (char*)sqlite3_column_text(stmt, 0);
-		int len = sqlite3_column_bytes(stmt, 1);
-		value.resize(len);
-		const void* blob = sqlite3_column_blob(stmt, 1);
-		for (int i = 0; i < len; i++)
-			value[i] = ((char*)blob)[i];
-		value = decrypt(value);
-		if (name == "UID")
-			uid = value;
-		if (value == "err")
+		sqlite3* sqlite = NULL;
+		sqlite3_stmt* stmt = NULL;
+
+		int res = sqlite3_open(file.c_str(), &sqlite);
+		if (res != SQLITE_OK)
 		{
-			display("异次元Cookie读取失败了！试试手动输入吧！");
+			display(qs("读取失败辣！请记得留下Cookie！"));
 			return;
 		}
-		cookie += name + "=" + value + ";";
+		res = sqlite3_prepare(sqlite, sql.c_str(), -1, &stmt, NULL);
+		if (res != SQLITE_OK)
+		{
+			display(qs("数据库出错了！"));
+			return;
+		}
+
+		//读取值并解密
+		while (sqlite3_step(stmt) == SQLITE_ROW)
+		{
+			string name, value;
+			name = (char*)sqlite3_column_text(stmt, 0);
+			int len = sqlite3_column_bytes(stmt, 1);
+			value.resize(len);
+			const void* blob = sqlite3_column_blob(stmt, 1);
+			for (int i = 0; i < len; i++)
+				value[i] = ((char*)blob)[i];
+			value = decrypt(value);
+			if (name == "UID")
+				uid = value;
+			if (value == "err")
+			{
+				display("异次元Cookie读取失败了！试试手动输入吧！");
+				return;
+			}
+			cookie += name + "=" + value + ";";
+		}
+
+		ui.pte_message->appendPlainText(qs("你的曲奇已经准备好了！"));
+		ui.pte_message->appendPlainText(qs("正在潜入敌方总部......"));
+		ui.pte_message->appendPlainText(qs("伪装UA：") + qs(ua));
+		if (get_course() && !uid.empty())
+			display(qs("潜入成功！请选择好要签到的课程，然后点击爆破吧！"));
+		else ui.pte_message->appendPlainText(qs("Cookie似乎出错了...？"));
 	}
-	ui.pte_message->appendPlainText(qs("你的曲奇已经准备好了！"));
-	ui.pte_message->appendPlainText(qs("正在潜入敌方总部......"));
-	ui.pte_message->appendPlainText(qs("伪装UA：") + qs(ua));
-	if (get_course() && !uid.empty())
-		display(qs("潜入成功！请选择好要签到的课程，然后点击爆破吧！"));
-	else ui.pte_message->appendPlainText(qs("Cookie似乎出错了...？"));
+	catch (const std::exception&)
+	{
+		
+	}
 }
 
 //手动登录按钮
