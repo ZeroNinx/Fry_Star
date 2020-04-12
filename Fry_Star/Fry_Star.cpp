@@ -402,7 +402,6 @@ void Fry_Star::auto_login()
 			}
 			cookie += name + "=" + value + ";";
 		}
-		display(qs8(cookie));
 		ui.pte_message->appendPlainText(qs("你的曲奇已经准备好了！"));
 		ui.pte_message->appendPlainText(qs("正在潜入敌方总部......"));
 		ui.pte_message->appendPlainText(qs("伪装UA：") + qs(ua));
