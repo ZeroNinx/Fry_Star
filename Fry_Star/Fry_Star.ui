@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>炒星签到通 v0.7 by Zero</string>
+   <string>炒星签到通 v0.71 by Zero</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -89,7 +89,7 @@
   <widget class="QSpinBox" name="sb_speed">
    <property name="geometry">
     <rect>
-     <x>390</x>
+     <x>380</x>
      <y>40</y>
      <width>51</width>
      <height>22</height>
@@ -111,7 +111,7 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>320</x>
+     <x>310</x>
      <y>40</y>
      <width>81</width>
      <height>21</height>
@@ -124,27 +124,40 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>450</x>
+     <x>440</x>
      <y>40</y>
-     <width>61</width>
+     <width>41</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>秒扫描一次</string>
+    <string>秒/次</string>
    </property>
   </widget>
   <widget class="QPushButton" name="btn_boom">
    <property name="geometry">
     <rect>
-     <x>530</x>
+     <x>540</x>
      <y>40</y>
-     <width>61</width>
-     <height>23</height>
+     <width>51</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
     <string>爆破</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btn_stop">
+   <property name="geometry">
+    <rect>
+     <x>480</x>
+     <y>40</y>
+     <width>51</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>停止</string>
    </property>
   </widget>
  </widget>
@@ -199,10 +212,27 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>btn_stop</sender>
+   <signal>clicked()</signal>
+   <receiver>MainForm</receiver>
+   <slot>btn_stop_click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>526</x>
+     <y>42</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>503</x>
+     <y>7</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>btn_submit_click()</slot>
   <slot>cb_unit_change(QString)</slot>
   <slot>btn_boom_click()</slot>
+  <slot>btn_stop_click()</slot>
  </slots>
 </ui>

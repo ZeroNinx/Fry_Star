@@ -37,7 +37,8 @@ private:
 
 public slots:
 	void auto_sign();
-	void btn_boom_click();
 	void btn_submit_click();
+	void btn_boom_click();
+	void btn_stop_click();
 	void cb_unit_change(QString);
 };

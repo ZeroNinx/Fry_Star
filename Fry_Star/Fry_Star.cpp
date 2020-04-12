@@ -77,7 +77,7 @@ Fry_Star::Fry_Star(QWidget* parent)
 
 	ui.le_cookie->setText(qs("----------如果自动获取失败的话可以试试手动输入哦----------"));
 	ui.pte_message->setFocus();
-	//auto_login();
+	auto_login();
 }
 
 //自定义：解密
@@ -454,6 +454,13 @@ void Fry_Star::btn_boom_click()
 	display(qs("正在准备爆破......"));
 	timer->setInterval(ui.sb_speed->value() * 1000);
 	timer->start();
+}
+
+//暂停按钮
+void Fry_Star::btn_stop_click()
+{
+	timer->stop();
+	display(qs("运动结束，放松一下吧~"));
 }
 
 //单元选择切换
