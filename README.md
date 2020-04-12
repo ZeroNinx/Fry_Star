@@ -4,4 +4,4 @@
 
 配合 http://mooc1-api.chaoxing.com/mycourse/backclazzdata?view=json&rss=1 的Cookie食用（记得连“Cookie:”一起复制下来！）
 
-开发环境：Windows 10 x64 MSVC 14.2,Qt 5.14,Boost 1.71
+开发环境：Windows 10 x64, MSVC 14.2, Qt 5.14, Boost 1.71, Cryptopp, SQLite3
