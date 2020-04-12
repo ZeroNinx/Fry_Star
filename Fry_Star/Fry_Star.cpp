@@ -34,27 +34,7 @@ Fry_Star::Fry_Star(QWidget* parent)
 	DATA_BLOB DataOut;
 	DATA_BLOB DataVerify;
 
-	ptree root;
 	fstream fs;
-	
-	string file = local_appdata_path + "\\Google\\Chrome\\User Data\\Local State";
-	fs.open(file, ios::in);
-	if (fs)
-	{
-		read_json(fs, root);
-		string encrypt_key = root.get_child("os_crypt").get<string>("encrypted_key");
-		string enc_cache;
-		StringSource ss1(encrypt_key, true, new Base64Decoder(new StringSink(enc_cache)));
-		encrypt_key = enc_cache.substr(5, enc_cache.length() - 5);
-
-		DataOut.pbData = (BYTE*)encrypt_key.c_str();
-		DataOut.cbData = encrypt_key.size();
-		CryptUnprotectData(&DataOut, NULL, NULL, NULL, NULL, 0, &DataVerify);
-		key = (char*)DataVerify.pbData;//密钥
-		key = key.substr(0, 32);
-	}
-	fs.close();
-
 	//读取储存的cookie
 	fs.open("cache.cfg", ios::in);
 	if (fs)
@@ -90,10 +70,35 @@ string Fry_Star::decrypt(string s)
 	DataOut.cbData = s.size();
 
 	//尝试Chrome80以下版本
-	if (CryptUnprotectData(&DataOut,NULL,NULL,NULL,NULL,0,&DataVerify))
-		return (char*)DataVerify.pbData;
+	if (CryptUnprotectData(&DataOut, NULL, NULL, NULL, NULL, 0, &DataVerify))
+	{
+		string res;
+		res.resize(DataVerify.cbData);
+		ffor(i, 0, DataVerify.cbData - 1)
+			res[i] = ((char*)DataVerify.pbData)[i];
+		return res;
+	}
 	else//Chrome 80以上版本
 	{
+		ptree root;
+		fstream fs;
+		string file = local_appdata_path + "\\Google\\Chrome\\User Data\\Local State";
+		fs.open(file, ios::in);
+		if (fs)
+		{
+			read_json(fs, root);
+			string encrypt_key = root.get_child("os_crypt").get<string>("encrypted_key");
+			string enc_cache;
+			StringSource ss1(encrypt_key, true, new Base64Decoder(new StringSink(enc_cache)));
+			encrypt_key = enc_cache.substr(5, enc_cache.length() - 5);
+
+			DataOut.pbData = (BYTE*)encrypt_key.c_str();
+			DataOut.cbData = encrypt_key.size();
+			CryptUnprotectData(&DataOut, NULL, NULL, NULL, NULL, 0, &DataVerify);
+			key = (char*)DataVerify.pbData;//密钥
+			key = key.substr(0, 32);
+		}
+		fs.close();
 		if (s.substr(0,2)=="v1")
 		{
 			string nonce = s.substr(3, 12);//随机数
@@ -397,7 +402,7 @@ void Fry_Star::auto_login()
 			}
 			cookie += name + "=" + value + ";";
 		}
-
+		display(qs8(cookie));
 		ui.pte_message->appendPlainText(qs("你的曲奇已经准备好了！"));
 		ui.pte_message->appendPlainText(qs("正在潜入敌方总部......"));
 		ui.pte_message->appendPlainText(qs("伪装UA：") + qs(ua));
