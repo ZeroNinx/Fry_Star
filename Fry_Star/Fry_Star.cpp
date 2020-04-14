@@ -518,9 +518,11 @@ void Fry_Star::icon_quit_click()
 void Fry_Star::closeEvent(QCloseEvent* event)
 {
 	this->hide();
-	qti->showMessage(qs("已最小化"), qs("将在后台持续检测签到"));
 	if (!icon_quit && timer->isActive())
+	{
+		qti->showMessage(qs("已最小化"), qs("将在后台持续检测签到"));
 		event->ignore();
+	}
 }
 
 //拆分字符串
