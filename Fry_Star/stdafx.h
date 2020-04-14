@@ -24,7 +24,11 @@
 #include <wincrypt.h>
 
 //Qt
+#include <QAction>
+#include <QCloseEvent>
+#include <QMenu>
 #include <QString>
+#include <QSystemTrayIcon>
 #include <QTimer>
 #include <QtWidgets/QApplication>
 #include <QMessageBox>

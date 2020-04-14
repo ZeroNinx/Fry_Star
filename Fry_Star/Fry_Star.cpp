@@ -30,6 +30,28 @@ Fry_Star::Fry_Star(QWidget* parent)
 	this->setFixedSize(width(), height());
 	ui.pte_message->setReadOnly(true);
 
+	//创建计时器
+	timer = new QTimer(this);
+
+	//设置任务栏小图标
+	qti = new QSystemTrayIcon(this);
+	qti->setIcon(QIcon("Resources/icon.ico"));
+	connect(qti, &QSystemTrayIcon::activated, this, &Fry_Star::icon_active);
+	
+	QMenu* qti_menu= new QMenu;
+	QAction* act_start = new QAction(qs("开始"), qti_menu);
+	QAction* act_stop = new QAction(qs("暂停"), qti_menu);
+	QAction* act_exit = new QAction(qs("退出"), qti_menu);
+	connect(act_start, &QAction::triggered, this, &Fry_Star::btn_boom_click);
+	connect(act_stop, &QAction::triggered, this, &Fry_Star::btn_stop_click);
+	connect(act_exit, &QAction::triggered, this, &Fry_Star::icon_quit_click);
+	qti_menu->addAction(act_start);
+	qti_menu->addAction(act_stop);
+	qti_menu->addAction(act_exit);
+	qti->setContextMenu(qti_menu);
+	qti->setToolTip(qs("监视已停止"));
+	qti->show();
+
 	//得到密钥
 	DATA_BLOB DataOut;
 	DATA_BLOB DataVerify;
@@ -48,9 +70,6 @@ Fry_Star::Fry_Star(QWidget* parent)
 		ui.le_cookie->setText(qs(saved_cookie));
 	}
 	fs.close();
-
-	//创建计时器
-	timer = new QTimer(this);
 
 	//绑定槽函数
 	connect(timer, &QTimer::timeout, this, &Fry_Star::auto_sign);
@@ -226,7 +245,8 @@ void Fry_Star::auto_sign()
 		//获取目标
 		Course current_course = course_list[ui.cb_unit->currentIndex()];
 		string target = "/ppt/activeAPI/taskactivelist?courseId=" + to_string(current_course.courseid) + "&classId=" + to_string(current_course.classid) + "&uid=" + uid;
-
+		string tip = "监视中: " + toGBK(current_course.name) + '\n' + "监视频率: " + to_string(ui.sb_speed->value()) + " 秒一次";
+		qti->setToolTip(qs(tip));
 		//查找域名
 		auto const results = resolver.resolve(host, port);
 		// 链接找到的域名
@@ -458,6 +478,7 @@ void Fry_Star::btn_boom_click()
 	display(qs("正在准备爆破......"));
 	timer->setInterval(ui.sb_speed->value() * 1000);
 	timer->start();
+	
 }
 
 //暂停按钮
@@ -465,13 +486,41 @@ void Fry_Star::btn_stop_click()
 {
 	timer->stop();
 	display(qs("运动结束，放松一下吧~"));
+	string tip = "监视已停止: " + toGBK(ui.cb_unit->currentText().toStdString());
+	qti->setToolTip(qs(tip));
 }
 
 //单元选择切换
 void Fry_Star::cb_unit_change(QString text)
 {
-	if(!text.isEmpty())
-	display(qs("当前科目：") + text);
+	if (!text.isEmpty())
+		display(qs("当前科目：") + text);
+}
+
+//从图标唤醒
+void Fry_Star::icon_active(QSystemTrayIcon::ActivationReason reason)
+{
+	if (reason == QSystemTrayIcon::DoubleClick)
+	{
+		this->show();
+		this->setFocus();
+	}
+}
+
+//从图标关闭
+void Fry_Star::icon_quit_click()
+{
+	icon_quit = true;
+	this->close();
+}
+
+//关闭事件
+void Fry_Star::closeEvent(QCloseEvent* event)
+{
+	this->hide();
+	qti->showMessage(qs("已最小化"), qs("将在后台持续检测签到"));
+	if (!icon_quit && timer->isActive())
+		event->ignore();
 }
 
 //拆分字符串

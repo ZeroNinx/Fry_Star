@@ -11,7 +11,8 @@ class Fry_Star : public QWidget
 public:
 	Fry_Star(QWidget *parent = Q_NULLPTR);
 	QTimer* timer;
-
+	QSystemTrayIcon* qti;
+	bool icon_quit = false;
 	std::vector<Course> course_list;//©нЁлап╠М
 
 	const std::string api_host = "mooc1-api.chaoxing.com";
@@ -41,4 +42,7 @@ public slots:
 	void btn_boom_click();
 	void btn_stop_click();
 	void cb_unit_change(QString);
+	void closeEvent(QCloseEvent*);
+	void icon_active(QSystemTrayIcon::ActivationReason);
+	void icon_quit_click();
 };
