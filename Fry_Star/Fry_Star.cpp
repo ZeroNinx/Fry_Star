@@ -245,7 +245,7 @@ void Fry_Star::auto_sign()
 		//获取目标
 		Course current_course = course_list[ui.cb_unit->currentIndex()];
 		string target = "/ppt/activeAPI/taskactivelist?courseId=" + to_string(current_course.courseid) + "&classId=" + to_string(current_course.classid) + "&uid=" + uid;
-		string tip = "监视中: " + toGBK(current_course.name) + '\n' + "监视频率: " + to_string(ui.sb_speed->value()) + " 秒一次";
+		string tip = "监视中: " + toGBK(ui.cb_unit->currentText().toStdString()) + '\n' + "监视频率: " + to_string(ui.sb_speed->value()) + " 秒一次";
 		qti->setToolTip(qs(tip));
 		//查找域名
 		auto const results = resolver.resolve(host, port);
@@ -475,10 +475,11 @@ void Fry_Star::btn_boom_click()
 {
 	if (ui.cb_unit->currentText().isEmpty())
 		return;
+	string tip = "监视中: " + toGBK(ui.cb_unit->currentText().toStdString()) + '\n' + "监视频率: " + to_string(ui.sb_speed->value()) + " 秒一次";
+	qti->setToolTip(qs(tip));
 	display(qs("正在准备爆破......"));
 	timer->setInterval(ui.sb_speed->value() * 1000);
 	timer->start();
-	
 }
 
 //暂停按钮
